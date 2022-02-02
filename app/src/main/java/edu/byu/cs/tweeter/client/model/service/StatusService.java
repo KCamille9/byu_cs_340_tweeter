@@ -13,7 +13,9 @@ import java.util.concurrent.Executors;
 
 import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
+import edu.byu.cs.tweeter.client.backgroundTask.PostStatusTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
+import edu.byu.cs.tweeter.client.presenter.MainActivityPresenter;
 import edu.byu.cs.tweeter.client.presenter.StatusPresenter;
 import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
@@ -21,9 +23,6 @@ import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class StatusService {
-
-
-
 
     public interface GetUserObserver {
         void handleSuccess(User user);
@@ -36,6 +35,14 @@ public class StatusService {
         void handleFailure(String message);
         void handleException(Exception exception);
     }
+
+    public interface PostStatusObserver {
+        void handleSuccess();
+        void handleFailure(String message);
+        void handleException(Exception exception);
+    }
+
+
 
     public void GetUserTask(AuthToken currUserAuthToken, String userAlias, GetUserObserver getUserObserver) {
         GetUserTask getUserTask = new GetUserTask(currUserAuthToken,
@@ -50,6 +57,14 @@ public class StatusService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(getStoryTask);
     }
+
+    public void GetPostStatusTask(AuthToken currUserAuthToken, Status status, PostStatusObserver postStatusObserver) {
+        PostStatusTask statusTask = new PostStatusTask(currUserAuthToken, status, new PostStatusHandler(postStatusObserver));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(statusTask);
+    }
+
+
 
     /**
      * Message handler (i.e., observer) for GetUserTask.
@@ -109,6 +124,33 @@ public class StatusService {
                 observer.handleFailure(message);
             } else if (msg.getData().containsKey(GetStoryTask.EXCEPTION_KEY)) {
                 Exception ex = (Exception) msg.getData().getSerializable(GetStoryTask.EXCEPTION_KEY);
+                observer.handleException(ex);
+            }
+        }
+    }
+
+    private class PostStatusHandler extends Handler {
+
+        private PostStatusObserver observer;
+
+        public PostStatusHandler(PostStatusObserver observer)
+        {
+            this.observer = observer;
+        }
+
+
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+
+            boolean success = msg.getData().getBoolean(PostStatusTask.SUCCESS_KEY);
+            if (success) {
+
+                observer.handleSuccess();
+            } else if (msg.getData().containsKey(PostStatusTask.MESSAGE_KEY)) {
+                String message = msg.getData().getString(PostStatusTask.MESSAGE_KEY);
+                observer.handleFailure(message);
+            } else if (msg.getData().containsKey(PostStatusTask.EXCEPTION_KEY)) {
+                Exception ex = (Exception) msg.getData().getSerializable(PostStatusTask.EXCEPTION_KEY);
                 observer.handleException(ex);
             }
         }
