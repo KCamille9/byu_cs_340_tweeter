@@ -74,8 +74,10 @@ public class MainActivity extends AppCompatActivity implements StatusDialogFragm
             throw new RuntimeException("User not passed to activity");
         }
 
+        AuthToken authToken = Cache.getInstance().getCurrUserAuthToken();
+
         SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager(),
-                selectedUser);
+                selectedUser, authToken);
 
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setOffscreenPageLimit(1);
