@@ -1,6 +1,5 @@
 package edu.byu.cs.tweeter.client.model.service;
 
-import android.content.Intent;
 import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
@@ -11,18 +10,17 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import edu.byu.cs.tweeter.client.backgroundTask.GetFeedTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
 import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
 import edu.byu.cs.tweeter.client.backgroundTask.PostStatusTask;
-import edu.byu.cs.tweeter.client.cache.Cache;
-import edu.byu.cs.tweeter.client.presenter.MainActivityPresenter;
-import edu.byu.cs.tweeter.client.presenter.StatusPresenter;
-import edu.byu.cs.tweeter.client.view.main.MainActivity;
 import edu.byu.cs.tweeter.model.domain.AuthToken;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class StatusService {
+
+
 
     public interface GetUserObserver {
         void handleSuccess(User user);
@@ -38,6 +36,12 @@ public class StatusService {
 
     public interface PostStatusObserver {
         void handleSuccess();
+        void handleFailure(String message);
+        void handleException(Exception exception);
+    }
+
+    public interface GetFeedObserver {
+        void handleSuccess(List<Status> statuses);
         void handleFailure(String message);
         void handleException(Exception exception);
     }
@@ -62,6 +66,13 @@ public class StatusService {
         PostStatusTask statusTask = new PostStatusTask(currUserAuthToken, status, new PostStatusHandler(postStatusObserver));
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(statusTask);
+    }
+
+    public void GetGetFeedTask(AuthToken currUserAuthToken, User user, int pageSize, Status lastStatus, GetFeedObserver getFeedObserver) {
+        GetFeedTask getFeedTask = new GetFeedTask(currUserAuthToken, user, pageSize, lastStatus, new GetFeedHandler(getFeedObserver));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(getFeedTask);
+
     }
 
 
@@ -151,6 +162,33 @@ public class StatusService {
                 observer.handleFailure(message);
             } else if (msg.getData().containsKey(PostStatusTask.EXCEPTION_KEY)) {
                 Exception ex = (Exception) msg.getData().getSerializable(PostStatusTask.EXCEPTION_KEY);
+                observer.handleException(ex);
+            }
+        }
+    }
+
+    private class GetFeedHandler extends Handler {
+
+        private GetFeedObserver observer;
+
+        public GetFeedHandler(GetFeedObserver observer)
+        {
+            this.observer = observer;
+        }
+
+
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+
+            boolean success = msg.getData().getBoolean(GetFeedTask.SUCCESS_KEY);
+            if (success) {
+                List<Status> statuses = (List<Status>) msg.getData().getSerializable(GetFeedTask.STATUSES_KEY);
+                observer.handleSuccess(statuses);
+            } else if (msg.getData().containsKey(GetFeedTask.MESSAGE_KEY)) {
+                String message = msg.getData().getString(GetFeedTask.MESSAGE_KEY);
+                observer.handleFailure(message);
+            } else if (msg.getData().containsKey(GetFeedTask.EXCEPTION_KEY)) {
+                Exception ex = (Exception) msg.getData().getSerializable(GetFeedTask.EXCEPTION_KEY);
                 observer.handleException(ex);
             }
         }

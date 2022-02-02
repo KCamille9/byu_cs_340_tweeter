@@ -1,19 +1,15 @@
 package edu.byu.cs.tweeter.client.presenter;
 
-import android.widget.Toast;
-
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import edu.byu.cs.tweeter.client.backgroundTask.GetStoryTask;
-import edu.byu.cs.tweeter.client.backgroundTask.GetUserTask;
 import edu.byu.cs.tweeter.client.cache.Cache;
 import edu.byu.cs.tweeter.client.model.service.StatusService;
 import edu.byu.cs.tweeter.model.domain.Status;
 import edu.byu.cs.tweeter.model.domain.User;
 
 public class StatusPresenter {
+
+
 
     public interface View {
         void displayErrorMessage(String message);
@@ -74,10 +70,30 @@ public class StatusPresenter {
         }
     }
 
+    public void loadMoreItemsGetFeedTask(User user) {
+
+        if (!isLoading) {   // This guard is important for avoiding a race condition in the scrolling code.
+            isLoading = true;
+            view.setLoadingFooter(true);
+
+            executeGetFeedTask(user);
+
+        }
+    }
+
+
+
     public void executeUserTask(String userAlias) {
 
         statusService.GetUserTask(Cache.getInstance().getCurrUserAuthToken(), userAlias, new GetUserObserver());
     }
+
+
+    public void executeGetFeedTask(User user) {
+        statusService.GetGetFeedTask(Cache.getInstance().getCurrUserAuthToken(), user, PAGE_SIZE, lastStatus, new GetFeedObserver());
+    }
+
+
 
     public class GetUserObserver implements StatusService.GetUserObserver
     {
@@ -126,6 +142,31 @@ public class StatusPresenter {
             isLoading = false;
             view.setLoadingFooter(false);
             view.displayErrorMessage("Failed to get story because of exception: " + exception.getMessage());
+        }
+    }
+
+    public class GetFeedObserver implements StatusService.GetFeedObserver
+    {
+
+
+        @Override
+        public void handleSuccess(List<Status> statuses) {
+            setLastStatus((statuses.size() > 0) ? statuses.get(statuses.size() - 1) : null);
+            setHasMorePages(hasMorePages);
+
+            view.setLoadingFooter(false);
+            view.addItems(statuses, hasMorePages);
+            setLoading(false);
+        }
+
+        @Override
+        public void handleFailure(String message) {
+            view.displayErrorMessage("Failed to get feed: " + message);
+        }
+
+        @Override
+        public void handleException(Exception exception) {
+            view.displayErrorMessage("Failed to get feed because of exception: " + exception.getMessage());
         }
     }
 

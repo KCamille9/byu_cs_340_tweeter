@@ -40,6 +40,34 @@ public class RegisterPresenter implements UserService.RegisterObserver {
         this.view = view;
     }
 
+    public void validateRegistration(String firstName, String lastName, String alias,
+                                     String password, String imageToUpload) {
+        if (firstName.length() == 0) {
+            throw new IllegalArgumentException("First Name cannot be empty.");
+        }
+        if (lastName.length() == 0) {
+            throw new IllegalArgumentException("Last Name cannot be empty.");
+        }
+        if (alias.length() == 0) {
+            throw new IllegalArgumentException("Alias cannot be empty.");
+        }
+        if (alias.charAt(0) != '@') {
+            throw new IllegalArgumentException("Alias must begin with @.");
+        }
+        if (alias.length() < 2) {
+            throw new IllegalArgumentException("Alias must contain 1 or more characters after the @.");
+        }
+        if (password.length() == 0) {
+            throw new IllegalArgumentException("Password cannot be empty.");
+        }
+
+        if (imageToUpload == null) {
+            throw new IllegalArgumentException("Profile image must be uploaded.");
+        }
+    }
+
+
+
     /**
      * Initiates the login process.
      *
@@ -61,13 +89,6 @@ public class RegisterPresenter implements UserService.RegisterObserver {
 
         view.registerSuccessful(user, authToken);
 
-
-//        Toast.makeText(getContext(), "Hello " + Cache.getInstance().getCurrUser().getName(), Toast.LENGTH_LONG).show();
-//        try {
-//            startActivity(intent);
-//        } catch (Exception e) {
-//            System.out.println(e.getMessage());
-//        }
     }
 
     @Override

@@ -37,6 +37,18 @@ public class LoginPresenter implements UserService.LoginObserver {
         this.view = view;
     }
 
+    public void validateLogin(String alias, String password) {
+        if (alias.charAt(0) != '@') {
+            throw new IllegalArgumentException("Alias must begin with @.");
+        }
+        if (alias.length() < 2) {
+            throw new IllegalArgumentException("Alias must contain 1 or more characters after the @.");
+        }
+        if (password.length() == 0) {
+            throw new IllegalArgumentException("Password cannot be empty.");
+        }
+    }
+
     /**
      * Initiates the login process.
      *
