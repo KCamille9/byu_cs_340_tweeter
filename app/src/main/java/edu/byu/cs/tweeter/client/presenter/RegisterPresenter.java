@@ -1,6 +1,7 @@
 package edu.byu.cs.tweeter.client.presenter;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -41,7 +42,7 @@ public class RegisterPresenter implements UserService.RegisterObserver {
     }
 
     public void validateRegistration(String firstName, String lastName, String alias,
-                                     String password, String imageToUpload) {
+                                     String password, Bitmap imageToUpload) {
         if (firstName.length() == 0) {
             throw new IllegalArgumentException("First Name cannot be empty.");
         }

@@ -94,15 +94,17 @@ public class RegisterFragment extends Fragment implements RegisterPresenter.View
             public void onClick(View view) {
                 // Register and move to MainActivity.
                 try {
+                    Bitmap image = ((BitmapDrawable) imageToUpload.getDrawable()).getBitmap();
+
                     presenter.validateRegistration(firstName.getText().toString(), lastName.getText().toString(), alias.getText().toString(),
-                            password.getText().toString(), imageToUpload.toString());
+                            password.getText().toString(), image);
 
                     errorView.setText(null);
                     registeringToast = Toast.makeText(getContext(), "Registering...", Toast.LENGTH_LONG);
                     registeringToast.show();
 
                     // Convert image to byte array.
-                    Bitmap image = ((BitmapDrawable) imageToUpload.getDrawable()).getBitmap();
+
                     ByteArrayOutputStream bos = new ByteArrayOutputStream();
                     image.compress(Bitmap.CompressFormat.JPEG, 100, bos);
                     byte[] imageBytes = bos.toByteArray();
