@@ -19,7 +19,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.Locale;
 
-import edu.byu.cs.client.R;
+//import edu.byu.cs.client.R;
+import edu.byu.cs.tweeter.R;
 import edu.byu.cs.tweeter.client.cache.Cache;
 
 /**
